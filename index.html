@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siklus Aliran Pendapatan & Interaksi Pasar | SMAN 1 Parongpong</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        econ: {
+                            light: '#e0f2fe', // light blue 100
+                            DEFAULT: '#0ea5e9', // light blue 500
+                            dark: '#0284c7', // light blue 600
+                            text: '#0c4a6e', // light blue 900
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f0f9ff;
+            color: #0c4a6e;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(224, 242, 254, 0.5);
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.1);
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .animate-bounce-subtle { animation: bounce-subtle 2s infinite ease-in-out; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Mascot States */
+        #mascot svg { transition: all 0.3s ease; }
+        .mascot-happy #eye-l, .mascot-happy #eye-r { d: path('M 30 35 Q 35 25 40 35'); stroke-width: 3; fill: transparent; }
+        .mascot-sad #eye-l, .mascot-sad #eye-r { d: path('M 30 30 L 40 40 M 30 40 L 40 30'); stroke-width: 3; }
+        .mascot-think #eye-l { transform: translateY(-5px); }
+        .mascot-think #eye-r { transform: scaleY(0.5); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e0f2fe; }
+        ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0284c7; }
+
+        /* Checkbox & Radio styling */
+        .option-label:has(input:checked) {
+            background-color: #e0f2fe;
+            border-color: #0ea5e9;
+            font-weight: 600;
+        }
+
+        /* Order Items */
+        .order-item { transition: transform 0.2s; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md py-4 px-6 sticky top-0 z-50 flex justify-between items-center border-b-4 border-econ">
+        <div class="flex items-center gap-3">
+            <div class="bg-econ text-white p-2 rounded-lg"><i class="fas fa-chart-line text-xl"></i></div>
+            <div>
+                <h1 class="text-lg md:text-xl font-bold leading-tight">Ekonomi Kelas 11</h1>
+                <p class="text-xs text-econ-DEFAULT font-semibold">Siklus Aliran Pendapatan & Interaksi Pasar</p>
+            </div>
+        </div>
+        <div class="hidden md:block text-right">
+            <p class="text-sm font-semibold">Pengembang: Sangaji Panji Yuda, SE.</p>
+            <p class="text-xs text-gray-500">SMAN 1 Parongpong</p>
+        </div>
+    </header>
+
+    <!-- Global Mascot (Fixed Bottom Right) -->
+    <div id="mascot-container" class="fixed bottom-4 right-4 z-50 animate-bounce-subtle hidden">
+        <div id="mascot-bubble" class="bg-white text-sm p-3 rounded-2xl rounded-br-none shadow-lg mb-2 opacity-0 transition-opacity duration-300 max-w-[200px] border-2 border-econ-light">
+            Halo! Saya Eko-Bot. Siap belajar?
+        </div>
+        <div id="mascot" class="w-24 h-24 bg-white rounded-full shadow-xl border-4 border-econ-light overflow-hidden flex justify-center items-center relative cursor-pointer" onclick="pokeMascot()">
+            <!-- SVG Owl/Robot Mascot -->
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+                <!-- Background -->
+                <circle cx="50" cy="50" r="50" fill="#e0f2fe" />
+                <!-- Body -->
+                <rect x="25" y="40" width="50" height="50" rx="20" fill="#0ea5e9" />
+                <!-- Belly -->
+                <rect x="35" y="55" width="30" height="30" rx="10" fill="#ffffff" />
+                <path d="M 40 65 L 60 65 M 40 75 L 60 75" stroke="#e0f2fe" stroke-width="2" stroke-linecap="round"/>
+                <!-- Head -->
+                <path d="M 20 50 Q 50 10 80 50 Z" fill="#0ea5e9" />
+                <!-- Eyes Background -->
+                <circle cx="35" cy="35" r="10" fill="#ffffff" />
+                <circle cx="65" cy="35" r="10" fill="#ffffff" />
+                <!-- Eyes/Pupils (Animated via CSS classes) -->
+                <path id="eye-l" d="M 32 35 A 3 3 0 1 0 38 35 A 3 3 0 1 0 32 35" fill="#0c4a6e" />
+                <path id="eye-r" d="M 62 35 A 3 3 0 1 0 68 35 A 3 3 0 1 0 62 35" fill="#0c4a6e" />
+                <!-- Beak -->
+                <path d="M 45 45 L 55 45 L 50 52 Z" fill="#fbbf24" />
+                <!-- Antenna -->
+                <line x1="50" y1="25" x2="50" y2="10" stroke="#0c4a6e" stroke-width="3" />
+                <circle cx="50" cy="8" r="4" fill="#ef4444" id="antenna-bulb" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main id="app-container" class="flex-grow container mx-auto px-4 py-8 max-w-4xl relative">
+        
+        <!-- Screen 0: Landing -->
+        <div id="screen-landing" class="glass-panel p-8 rounded-2xl text-center animate-fade-in mt-10">
+            <div class="w-32 h-32 mx-auto bg-econ text-white rounded-full flex items-center justify-center text-5xl mb-6 shadow-lg shadow-blue-200">
+                <i class="fas fa-sync-alt animate-spin-slow"></i>
+            </div>
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Media Pembelajaran Interaktif<br>Siklus Perekonomian</h2>
+            <p class="text-gray-600 mb-8 max-w-2xl mx-auto">Selamat datang di modul pembelajaran ekonomi *Deep Learning*. Kita akan mengeksplorasi bagaimana uang, barang, dan jasa mengalir tanpa henti dalam perekonomian, layaknya aliran darah dalam tubuh kita.</p>
+            
+            <div class="bg-blue-50 p-4 rounded-xl inline-block text-left mb-8 border border-blue-100">
+                <p class="font-bold text-econ-dark mb-2"><i class="fas fa-info-circle mr-2"></i>Informasi Modul:</p>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Fase F / Kelas 11 SMA</li>
+                    <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Tahap 1 & 2: Eksplorasi Konsep Interaktif</li>
+                    <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Tahap 3: Evaluasi HOTS (10 Soal)</li>
+                </ul>
+            </div>
+            <br>
+            <button onclick="startApp()" class="bg-econ hover:bg-econ-dark text-white font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105 shadow-xl shadow-blue-300">
+                <i class="fas fa-play mr-2"></i> Mulai Pembelajaran
+            </button>
+        </div>
+
+        <!-- Dynamic Content Screen (For Stage 1, 2, and 3) -->
+        <div id="screen-dynamic" class="hidden">
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="bg-econ h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            
+            <div class="flex justify-between items-center mb-4">
+                <span id="stage-badge" class="bg-blue-100 text-econ-dark text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-blue-200">Tahap 1</span>
+                <span id="progress-text" class="text-sm text-gray-500 font-semibold">0/0</span>
+            </div>
+
+            <!-- Content Area -->
+            <div id="content-area" class="glass-panel p-6 md:p-8 rounded-2xl animate-fade-in">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="screen-result" class="hidden glass-panel p-8 rounded-2xl text-center animate-fade-in mt-10">
+            <h2 class="text-3xl font-bold mb-2">Evaluasi Selesai!</h2>
+            <p class="text-gray-600 mb-6">Berikut adalah hasil analisis pemahaman Anda pada materi Siklus Aliran Pendapatan.</p>
+            
+            <div class="relative w-48 h-48 mx-auto mb-6">
+                <svg class="w-full h-full" viewBox="0 0 36 36">
+                    <path class="text-gray-200" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="100, 100" />
+                    <path id="score-circle" class="text-econ" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="0, 100" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="final-score" class="text-5xl font-bold text-econ-dark">0</span>
+                    <span class="text-xs text-gray-500 font-semibold">dari 100</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-green-50 p-3 rounded-lg border border-green-100">
+                    <p class="text-green-800 text-sm font-bold">Benar</p>
+                    <p id="stat-correct" class="text-xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-red-50 p-3 rounded-lg border border-red-100">
+                    <p class="text-red-800 text-sm font-bold">Salah</p>
+                    <p id="stat-wrong" class="text-xl font-bold text-red-600">0</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 col-span-2">
+                    <p class="text-econ-text text-sm font-bold">Predikat</p>
+                    <p id="stat-predicate" class="text-xl font-bold text-econ-dark">Sangat Baik</p>
+                </div>
+            </div>
+
+            <div id="reflection-message" class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-left mb-8 text-sm text-gray-700">
+                <!-- Reflection injected here -->
+            </div>
+
+            <button onclick="location.reload()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-full transition">
+                <i class="fas fa-redo mr-2"></i> Ulangi Modul
+            </button>
+        </div>
+    </main>
+
+    <!-- Modal for Feedback -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 m-4 transform scale-95 transition-transform duration-300" id="feedback-panel">
+            <div class="text-center mb-4">
+                <div id="feedback-icon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3"></div>
+                <h3 id="feedback-title" class="text-xl font-bold"></h3>
+            </div>
+            <div id="feedback-explanation" class="text-gray-700 text-sm mb-6 p-4 bg-gray-50 rounded-lg border"></div>
+            <button onclick="closeFeedbackAndNext()" id="btn-next-step" class="w-full bg-econ hover:bg-econ-dark text-white font-bold py-3 rounded-xl transition">
+                Lanjutkan <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA NASKAH DAN ALUR PEMBELAJARAN (MPI) ---
+        const learningFlow = [
+            // TAHAP 1: PENGANTAR & EKSPLORASI AWAL
+            {
+                stage: "Tahap 1: Pengantar",
+                type: "content",
+                title: "Selamat Datang di 'The Economy Matrix'",
+                content: `
+                    <p class="mb-4">Tahukah Anda? Setiap lembar Rupiah yang Anda belanjakan tidak pernah diam. Ia terus mengalir dan menjadi sumber kehidupan bagi masyarakat luas, dari tetangga sebelah hingga ke pelosok negeri.</p>
+                    <p class="mb-4">Dalam ilmu ekonomi, pergerakan uang, barang, jasa, dan faktor produksi antarpelaku ekonomi disebut sebagai <strong>Siklus Aliran Pendapatan (Circular Flow of Income)</strong>.</p>
+                `,
+                interaction: {
+                    type: "mc",
+                    question: "Bayangkan Anda baru saja menerima dana Bantuan Langsung Tunai (BLT) dari Pemerintah (RTG) dan membelanjakannya di Warung Sembako 'Mang Oleh' (RTP). Menurut Anda, ke mana perginya uang tersebut setelah masuk ke laci kasir Mang Oleh?",
+                    options: [
+                        "Berhenti di kasir dan menjadi kekayaan Mang Oleh sepenuhnya tanpa sisa.",
+                        "Hilang dari peredaran karena sudah ditukar dengan sembako yang Anda beli.",
+                        "Mengalir sebagian untuk membeli stok beras ke agen, membayar pekerja warung, dan membayar retribusi desa/pajak."
+                    ],
+                    correctIndex: 2,
+                    feedback: "Benar sekali! Uang BLT Anda (pengeluaran Konsumen/RTK) menjadi pendapatan Warung (Produsen/RTP). Uang tersebut kemudian diputar lagi untuk membayar faktor produksi (stok beras, pekerja) dan kewajiban pajak/retribusi (kembali ke Pemerintah/RTG)."
+                }
+            },
+            // TAHAP 2: PENDALAMAN MATERI (Interaksi 1)
+            {
+                stage: "Tahap 2: Pendalaman",
+                type: "content",
+                title: "Model Perekonomian 2 Sektor (Konteks Lokal)",
+                content: `
+                    <p class="mb-4">Perekonomian paling sederhana melibatkan dua pelaku utama: <strong>Rumah Tangga Konsumen (RTK)</strong> dan <strong>Rumah Tangga Produsen (RTP)</strong>.</p>
+                    <div class="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-100 flex items-center justify-center">
+                        <i class="fas fa-home text-3xl text-econ mr-4"></i> <i class="fas fa-exchange-alt text-gray-400 mx-4"></i> <i class="fas fa-industry text-3xl text-gray-600 ml-4"></i>
+                    </div>
+                    <p class="mb-4">RTK (masyarakat) memiliki faktor produksi (tenaga kerja, tanah, modal) dan menjualnya ke RTP di <strong>Pasar Input</strong>. RTP kemudian menghasilkan barang/jasa dan menjualnya kembali ke RTK di <strong>Pasar Output</strong>.</p>
+                `,
+                interaction: {
+                    type: "tf",
+                    question: "Benar atau Salah: Ketika warga Majalaya bekerja di pabrik tekstil lokal (Pasar Input), warga tersebut (RTK) bertindak sebagai Pembeli, sedangkan Pabrik Tekstil (RTP) bertindak sebagai Penjual.",
+                    correctAnswer: false,
+                    feedback: "Salah. Di Pasar Input (Tenaga Kerja), warga Majalaya (RTK) justru bertindak sebagai **Penjual/Penyedia** jasa tenaganya. Pabrik Tekstil (RTP) lah yang bertindak sebagai **Pembeli** jasa warga tersebut untuk memproduksi kain."
+                }
+            },
+            // TAHAP 2: PENDALAMAN MATERI (Interaksi 2)
+            {
+                stage: "Tahap 2: Pendalaman",
+                type: "content",
+                title: "Injeksi (Suntikan) & Kebocoran",
+                content: `
+                    <p class="mb-4">Siklus tidak selamanya berputar utuh. Ada dana yang keluar dari siklus domestik (<strong>Kebocoran / Leakage</strong>), seperti Tabungan (S) di bank, Pajak (T), dan Impor (M).</p>
+                    <p class="mb-4">Sebaliknya, ada dana baru yang masuk memperbesar siklus (<strong>Suntikan / Injection</strong>), seperti Investasi (I), Pengeluaran Pemerintah/APBN (G), dan Ekspor (X).</p>
+                `,
+                interaction: {
+                    type: "match",
+                    question: "Pasangkan aktivitas ekonomi nyata di Indonesia berikut ini, apakah ia termasuk 'Kebocoran' (Leakage) atau 'Suntikan' (Injection)?",
+                    items: [
+                        { text: "Pemerintah RI membangun infrastruktur Ibu Kota Nusantara (IKN)", target: "Suntikan" },
+                        { text: "Masyarakat banyak mengimpor produk *Fast Fashion* dari luar negeri", target: "Kebocoran" },
+                        { text: "Pengrajin mebel Jepara berhasil mengekspor produknya ke Eropa", target: "Suntikan" }
+                    ],
+                    options: ["Kebocoran", "Suntikan"],
+                    feedback: "Tepat! Belanja negara untuk IKN (G) dan Ekspor mebel Jepara (X) memasukkan uang segar ke aliran ekonomi domestik (Suntikan). Sedangkan mengimpor produk luar (M) berarti rupiah kita mengalir keluar negeri (Kebocoran)."
+                }
+            },
+            // TAHAP 3: EVALUASI (10 SOAL HOTS)
+            {
+                stage: "Tahap 3: Evaluasi",
+                type: "quiz_intro",
+                title: "Studi Kasus & Evaluasi Konsep",
+                content: "Anda telah memahami alur dan interaksi antar pelaku ekonomi. Kini saatnya menguji pemahaman analisis Anda melalui 10 studi kasus dan pertanyaan HOTS (Higher Order Thinking Skills) berbasis fenomena di Indonesia. Bersiaplah!",
+            }
+        ];
+
+        // Soal Kuis (Tahap 3)
+        const quizQuestions = [
+            {
+                q: "Belakangan ini marak fenomena *thrift shop* (baju bekas impor) di Indonesia. Dari sudut pandang siklus ekonomi 4 sektor, apa dampak makroekonomi langsung jika masyarakat lebih suka membeli baju bekas impor ini daripada baju buatan pabrik garmen lokal di Bandung/Majalaya?",
+                type: "mc",
+                options: [
+                    "Siklus pendapatan nasional akan bertambah karena harga baju bekas sangat murah.",
+                    "Terjadi peningkatan 'kebocoran' (Leakage) berupa Impor, sekaligus menurunkan pendapatan RTP domestik (Pabrik Majalaya).",
+                    "Sektor investasi domestik akan langsung meningkat pesat.",
+                    "Pemerintah akan mendapat suntikan dana segar dari ekspor pakaian bekas."
+                ],
+                correctIndex: 1,
+                feedback: "Benar. Membeli produk impor (meski bekas) adalah bentuk Impor (M) yang merupakan 'kebocoran' uang ke luar negeri. Secara bersamaan, pabrik lokal (RTP) di Majalaya kehilangan pembeli, sehingga pendapatan mereka turun (risiko PHK)."
+            },
+            {
+                q: "Di pasar faktor produksi (pasar input), masyarakat (RTK) menyediakan sumber daya kepada perusahaan (RTP). Balas jasa (pendapatan) apa saja yang MURNI diterima masyarakat (RTK) Indonesia dari pasar input ini? (Pilih semua yang benar)",
+                type: "complex",
+                options: ["Sewa (Rent) atas tanah yang disewa pabrik kelapa sawit", "Pajak Pertambahan Nilai (PPN) dari struk belanja", "Upah (Wage) buruh pabrik sepatu", "Bunga (Interest) dari deposito di bank", "Bantuan Langsung Tunai (BLT)", "Laba (Profit) UMKM dari hasil usahanya"],
+                correctIndices: [0, 2, 3, 5],
+                feedback: "Tepat. Balas jasa murni pasar input adalah Sewa (tanah), Upah (tenaga kerja), Bunga (modal), dan Laba (kewirausahaan). PPN dan BLT adalah bentuk interaksi (pajak/subsidi) dengan Pemerintah (RTG)."
+            },
+            {
+                q: "Studi Kasus T/F: 'Penarikan Pajak Penghasilan (PPh) yang masif oleh Ditjen Pajak dari masyarakat mutlak akan selalu membuat perekonomian Indonesia lesu dan terpuruk.'",
+                type: "tf",
+                correctAnswer: false,
+                feedback: "Salah. Memang benar pajak (Tx) adalah 'kebocoran' yang mengurangi uang pegangan masyarakat (RTK). Namun, jika uang pajak tersebut dikelola pemerintah untuk membangun bendungan, subsidi pupuk, atau jalan tol (Belanja Negara/G), hal itu menjadi 'Suntikan' produktif yang justru memacu pertumbuhan ekonomi."
+            },
+            {
+                q: "Manakah dari kebijakan pemerintah RI di bawah ini yang berperan murni sebagai 'Injection' (Suntikan) dalam siklus aliran pendapatan nasional? (Pilih lebih dari 1)",
+                type: "complex",
+                options: [
+                    "Penyaluran Bantuan Langsung Tunai (BLT) El Nino kepada jutaan keluarga miskin.",
+                    "Rencana kenaikan tarif PPN menjadi 12% pada tahun 2025.",
+                    "Proyek pembangunan infrastruktur dasar di Ibu Kota Nusantara (IKN) menggunakan APBN.",
+                    "Himbauan agar masyarakat meningkatkan saldo tabungannya di bank."
+                ],
+                correctIndices: [0, 2],
+                feedback: "Benar. BLT (transfer payment) dan pembangunan proyek infrastruktur IKN (Belanja Pemerintah/G) adalah suntikan yang menambah peredaran uang/pendapatan langsung ke tangan masyarakat (RTK) dan perusahaan (RTP)."
+            },
+            {
+                q: "Perhatikan dampak berantai (Multiplier Effect) dari Investasi Asing. Urutkan siklus aliran uang yang terjadi secara logis jika perusahaan otomotif asing (FDI) membangun pabrik raksasa di Cikarang:",
+                type: "order",
+                items: [
+                    "Masuknya dana investasi asing (Injeksi) ke Cikarang.",
+                    "Pabrik tersebut merekrut ribuan pekerja lokal dari sekitarnya.",
+                    "Pekerja lokal menerima pendapatan rutin berupa Upah.",
+                    "Pekerja lokal membelanjakan upahnya untuk membeli makanan, perumahan, dan motor di Warung/Toko sekitar."
+                ],
+                correctOrder: [0, 1, 2, 3],
+                feedback: "Urutan logis yang tepat! Investasi masuk -> Menciptakan permintaan tenaga kerja -> Masyarakat (RTK) mendapat upah -> RTK konsumsi di pasar barang lokal. Inilah contoh nyata bagaimana investasi asing (injeksi) menghidupkan warung/UMKM di sekitarnya."
+            },
+            {
+                q: "Analisis proyek Kereta Cepat 'Whoosh' (Jakarta-Bandung). Jika di tahap awal proyek ini banyak mendatangkan tenaga ahli dan mengimpor baja/rel dari Tiongkok, bagaimana interaksi ini tergambar dalam model ekonomi 4 sektor?",
+                type: "mc",
+                options: [
+                    "Menjadi Ekspor murni bagi Indonesia karena keretanya ada di dalam negeri.",
+                    "Hanya melibatkan RTG (Pemerintah RI) dan RTP lokal tanpa melibatkan sektor luar negeri.",
+                    "Terjadi 'kebocoran' (Leakage) berupa Impor material/jasa ke Tiongkok, diiringi 'suntikan' (Injection) Investasi infrastruktur di Indonesia.",
+                    "Mengurangi pajak yang harus dibayar RTK kepada RTG secara permanen."
+                ],
+                correctIndex: 2,
+                feedback: "Benar. Pembelian material dan pembayaran tenaga ahli asing adalah Impor (kebocoran uang kita keluar). Namun, wujud fisiknya yang dibangun di Indonesia merupakan Investasi infrastruktur (suntikan) yang diharapkan memutar roda ekonomi dan mendatangkan turis di masa depan."
+            },
+            {
+                q: "Apa peran krusial Bank umum (seperti BRI, Mandiri, atau BCA) dalam Siklus Aliran Pendapatan masyarakat pedesaan?",
+                type: "mc",
+                options: [
+                    "Mencetak uang fisik rupiah untuk dibagikan gratis saat panen gagal.",
+                    "Bertindak sebagai pemungut pajak utama pengganti Ditjen Pajak.",
+                    "Menyalurkan 'kebocoran' berupa Tabungan (S) petani/masyarakat menjadi 'suntikan' berupa Kredit/Pinjaman Modal kepada UMKM lokal.",
+                    "Membeli langsung hasil panen petani yang tidak laku."
+                ],
+                correctIndex: 2,
+                feedback: "Tepat sekali! Bank adalah lembaga intermediasi. Uang yang ditabung masyarakat (kebocoran) dikumpulkan bank dan disalurkan kembali sebagai kredit modal (KUR) kepada UMKM (suntikan investasi kembali ke sistem)."
+            },
+            {
+                q: "Sering terjadi fenomena Pemutusan Hubungan Kerja (PHK) di pabrik tekstil saat ekspor melemah. Respons rasional yang paling mungkin dilakukan oleh Rumah Tangga Konsumen (RTK) korban PHK di 'Pasar Barang' adalah...",
+                type: "mc",
+                options: [
+                    "Secara drastis menurunkan tingkat konsumsinya (berhemat) karena hilangnya pendapatan (Upah).",
+                    "Memborong barang mewah karena mendapat pesangon.",
+                    "Membayar pajak bumi dan bangunan (PBB) dengan sukarela lebih awal.",
+                    "Mendirikan pabrik tekstil saingan keesokan harinya."
+                ],
+                correctIndex: 0,
+                feedback: "Logika yang tepat. Ketika RTK kehilangan pekerjaan di Pasar Input, arus pendapatannya (Upah) terhenti. Respons paling rasional di Pasar Output (Barang) adalah memangkas pengeluaran, yang pada gilirannya akan mengurangi pendapatan RTP lain (warung/toko)."
+            },
+            {
+                q: "Pasangkan dengan tepat peranan pelaku ekonomi di bawah ini dengan contoh nyatanya di Indonesia!",
+                type: "match",
+                items: [
+                    { text: "Buruh pabrik sepatu di Tangerang & Pembeli beras di pasar", target: "RTK (Konsumen)" },
+                    { text: "PT Pertamina (penyedia BBM) & UMKM Keripik Tempe", target: "RTP (Produsen)" },
+                    { text: "Kementerian Keuangan & Pemda yang mencairkan bansos", target: "RTG (Pemerintah)" }
+                ],
+                options: ["RTK (Konsumen)", "RTP (Produsen)", "RTG (Pemerintah)", "Masyarakat Luar Negeri"],
+                feedback: "Sempurna! Buruh dan pembeli adalah RTK. Perusahaan BUMN maupun UMKM adalah RTP. Kementerian dan Pemda bertindak sebagai RTG (Regulator/Pengatur)."
+            },
+            {
+                q: "Dalam analisis makroekonomi, misalkan tahun ini total Tabungan masyarakat Indonesia di bank (S) dan Pajak yang ditarik negara (Tx) LEBIH KECIL dari total Kredit Investasi swasta (I) ditambah Belanja APBN (G). Apa kesimpulan logisnya?",
+                type: "mc",
+                options: [
+                    "Perekonomian Indonesia sedang mengalami resesi atau penciutan (kontraksi) parah.",
+                    "Terjadi kebocoran devisa besar-besaran yang akan mematikan UMKM.",
+                    "Perekonomian sedang mengalami ekspansi (pertumbuhan) karena total Suntikan (I+G) > Kebocoran (S+Tx).",
+                    "Seluruh rakyat Indonesia dipastikan bebas dari hutang."
+                ],
+                correctIndex: 2,
+                feedback: "Sangat Analitis! Tabungan dan Pajak (S + Tx) adalah 'Kebocoran', sedangkan Investasi dan Belanja Negara (I + G) adalah 'Suntikan'. Jika total Suntikan > Kebocoran, maka jumlah uang yang berputar bertambah, memicu roda ekonomi bergerak lebih kencang (ekspansi/pertumbuhan)."
+            }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let currentStageIndex = 0;
+        let isQuizMode = false;
+        let currentQuizIndex = 0;
+        let score = 0;
+        let correctAnswersCount = 0;
+        let wrongAnswersCount = 0;
+        
+        let audioCtx = null;
+
+        // --- AUDIO SYSTEM (Native Web Audio API for maximum reliability) ---
+        function initAudio() {
+            if (audioCtx) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            } catch (e) {
+                console.warn("Web Audio API not supported in this browser", e);
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(392, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'correct') {
+                const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 chord
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.12);
+                    osc.stop(now + idx * 0.12 + 0.2);
+                });
+            } else if (type === 'wrong') {
+                const notes = [261.63, 196.00]; // C4, G3 descending tone
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.18);
+                    gain.gain.setValueAtTime(0.12, now + idx * 0.18);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.18 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.18);
+                    osc.stop(now + idx * 0.18 + 0.25);
+                });
+            } else if (type === 'finish') {
+                const chord1 = [261.63, 329.63, 392.00, 523.25]; // C major
+                const chord2 = [349.23, 440.00, 523.25, 698.46]; // F major
+                
+                chord1.forEach((freq) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.8);
+                });
+                
+                chord2.forEach((freq) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + 0.8);
+                    gain.gain.setValueAtTime(0.1, now + 0.8);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + 0.8);
+                    osc.stop(now + 1.8);
+                });
+            }
+        }
+
+        // --- MASCOT SYSTEM ---
+        function setMascotState(state, message = "") {
+            const mascot = document.getElementById('mascot');
+            const bubble = document.getElementById('mascot-bubble');
+            const bulb = document.getElementById('antenna-bulb');
+            
+            mascot.className = `w-24 h-24 bg-white rounded-full shadow-xl border-4 border-econ-light overflow-hidden flex justify-center items-center relative cursor-pointer mascot-${state}`;
+            
+            if(state === 'happy') bulb.setAttribute('fill', '#10b981'); // green
+            else if(state === 'sad') bulb.setAttribute('fill', '#ef4444'); // red
+            else bulb.setAttribute('fill', '#f59e0b'); // yellow
+            
+            if (message) {
+                bubble.innerHTML = message;
+                bubble.classList.remove('opacity-0');
+                clearTimeout(window.mascotTimeout);
+                window.mascotTimeout = setTimeout(() => {
+                    bubble.classList.add('opacity-0');
+                }, 5000);
+            }
+        }
+
+        function pokeMascot() {
+            playSound('click');
+            setMascotState('happy', 'Ayo semangat belajarnya!');
+            document.getElementById('mascot-container').classList.add('animate-shake');
+            setTimeout(() => document.getElementById('mascot-container').classList.remove('animate-shake'), 400);
+        }
+
+        // --- CORE NAVIGATION ---
+        function startApp() {
+            initAudio();
+            playSound('click');
+            document.getElementById('screen-landing').classList.add('hidden');
+            document.getElementById('screen-dynamic').classList.remove('hidden');
+            document.getElementById('mascot-container').classList.remove('hidden');
+            setMascotState('happy', 'Mari kita mulai eksplorasi!');
+            renderCurrentStage();
+        }
+
+        function updateProgress() {
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const badge = document.getElementById('stage-badge');
+            
+            if (!isQuizMode) {
+                let pct = (currentStageIndex / learningFlow.length) * 100;
+                progressBar.style.width = `${pct}%`;
+                progressText.innerText = `${currentStageIndex + 1}/${learningFlow.length}`;
+                badge.innerText = learningFlow[currentStageIndex].stage;
+            } else {
+                let pct = (currentQuizIndex / quizQuestions.length) * 100;
+                progressBar.style.width = `${pct}%`;
+                progressText.innerText = `${currentQuizIndex + 1}/${quizQuestions.length}`;
+                badge.innerText = "Tahap 3: Evaluasi";
+                badge.className = "bg-orange-100 text-orange-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-orange-200";
+            }
+        }
+
+        function renderCurrentStage() {
+            const area = document.getElementById('content-area');
+            area.innerHTML = '';
+            area.classList.remove('animate-fade-in');
+            void area.offsetWidth; // trigger reflow
+            area.classList.add('animate-fade-in');
+
+            if (!isQuizMode) {
+                const stage = learningFlow[currentStageIndex];
+                updateProgress();
+                
+                let html = `<h2 class="text-2xl font-bold mb-4 text-econ-dark">${stage.title}</h2>`;
+                if (stage.content) html += `<div class="text-gray-700 leading-relaxed mb-6">${stage.content}</div>`;
+                
+                if (stage.type === 'quiz_intro') {
+                    html += `<button onclick="enterQuizMode()" class="w-full bg-econ hover:bg-econ-dark text-white font-bold py-3 rounded-xl transition shadow-lg mt-4">Mulai Evaluasi <i class="fas fa-play ml-2"></i></button>`;
+                    area.innerHTML = html;
+                    setMascotState('think', 'Siap untuk ujian akhir? Soalnya HOTS lho!');
+                    return;
+                }
+
+                if (stage.interaction) {
+                    html += `<div class="bg-white p-5 rounded-xl border-2 border-dashed border-econ-light mt-4 shadow-sm">`;
+                    html += `<h3 class="font-bold text-lg mb-3"><i class="fas fa-question-circle text-econ mr-2"></i>Interaksi:</h3>`;
+                    html += `<p class="mb-4 text-gray-800 font-medium">${stage.interaction.question}</p>`;
+                    html += renderInteractionUI(stage.interaction, `stage-${currentStageIndex}`);
+                    html += `</div>`;
+                    html += `<button id="btn-check-stage" onclick="checkStageInteraction()" class="mt-6 w-full bg-econ text-white font-bold py-3 rounded-xl transition opacity-50 cursor-not-allowed" disabled>Cek Jawaban</button>`;
+                }
+
+                area.innerHTML = html;
+                setupInteractionListeners(stage.interaction, `stage-${currentStageIndex}`);
+                
+            } else {
+                renderQuizQuestion();
+            }
+        }
+
+        function enterQuizMode() {
+            playSound('click');
+            isQuizMode = true;
+            currentQuizIndex = 0;
+            renderQuizQuestion();
+        }
+
+        // --- INTERACTION RENDERERS (Supports both Stage & Quiz modes) ---
+        function renderInteractionUI(data, idPrefix) {
+            let html = '';
+            switch(data.type) {
+                case 'mc':
+                    html += `<div class="space-y-3">`;
+                    data.options.forEach((opt, idx) => {
+                        html += `
+                        <label class="option-label flex items-center p-4 border rounded-xl cursor-pointer hover:bg-blue-50 transition">
+                            <input type="radio" name="int-${idPrefix}" value="${idx}" class="w-5 h-5 text-econ border-gray-300 focus:ring-econ mr-3">
+                            <span class="text-gray-700">${opt}</span>
+                        </label>`;
+                    });
+                    html += `</div>`;
+                    break;
+                case 'complex':
+                    html += `<div class="space-y-3">`;
+                    data.options.forEach((opt, idx) => {
+                        html += `
+                        <label class="option-label flex items-center p-4 border rounded-xl cursor-pointer hover:bg-blue-50 transition">
+                            <input type="checkbox" name="int-${idPrefix}" value="${idx}" class="w-5 h-5 text-econ rounded border-gray-300 focus:ring-econ mr-3">
+                            <span class="text-gray-700">${opt}</span>
+                        </label>`;
+                    });
+                    html += `</div>`;
+                    break;
+                case 'tf':
+                    html += `
+                    <div class="flex gap-4">
+                        <label class="option-label flex-1 flex flex-col items-center justify-center p-6 border rounded-xl cursor-pointer hover:bg-blue-50 transition">
+                            <input type="radio" name="int-${idPrefix}" value="true" class="hidden">
+                            <i class="fas fa-check-circle text-4xl text-green-500 mb-2"></i>
+                            <span class="font-bold">BENAR</span>
+                        </label>
+                        <label class="option-label flex-1 flex flex-col items-center justify-center p-6 border rounded-xl cursor-pointer hover:bg-blue-50 transition">
+                            <input type="radio" name="int-${idPrefix}" value="false" class="hidden">
+                            <i class="fas fa-times-circle text-4xl text-red-500 mb-2"></i>
+                            <span class="font-bold">SALAH</span>
+                        </label>
+                    </div>`;
+                    break;
+                case 'match':
+                    html += `<div class="space-y-3">`;
+                    data.items.forEach((item, idx) => {
+                        html += `
+                        <div class="flex flex-col md:flex-row md:items-center gap-2 p-3 border rounded-xl bg-gray-50">
+                            <div class="flex-1 text-sm font-medium text-gray-800">${item.text}</div>
+                            <div class="text-center md:text-right">
+                                <i class="fas fa-arrow-right text-gray-400 mx-2 hidden md:inline-block"></i>
+                                <select name="match-${idPrefix}-${idx}" class="match-select bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-econ focus:border-econ block w-full md:w-auto p-2.5">
+                                    <option value="" disabled selected>-- Pilih Pasangan --</option>
+                                    ${data.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>`;
+                    });
+                    html += `</div>`;
+                    break;
+                case 'order':
+                    html += `<div id="order-container-${idPrefix}" class="space-y-2">`;
+                    // Shuffle for initial display
+                    let shuffledIndices = [...Array(data.items.length).keys()].sort(() => Math.random() - 0.5);
+                    shuffledIndices.forEach((idx) => {
+                        html += `
+                        <div class="order-item flex items-center p-3 border rounded-xl bg-white shadow-sm" data-id="${idx}">
+                            <div class="flex flex-col mr-3 gap-1">
+                                <button onclick="moveOrder(this, 'up')" class="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded p-1 text-xs"><i class="fas fa-chevron-up"></i></button>
+                                <button onclick="moveOrder(this, 'down')" class="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded p-1 text-xs"><i class="fas fa-chevron-down"></i></button>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">${data.items[idx]}</span>
+                        </div>`;
+                    });
+                    html += `</div><p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle"></i> Gunakan tombol panah untuk mengurutkan.</p>`;
+                    break;
+            }
+            return html;
+        }
+
+        function setupInteractionListeners(data, idPrefix) {
+            const btn = document.getElementById(isQuizMode ? 'btn-check-quiz' : 'btn-check-stage');
+            const enableBtn = () => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.classList.add('hover:bg-econ-dark', 'shadow-md');
+            };
+
+            if (data.type === 'mc' || data.type === 'tf') {
+                const inputs = document.querySelectorAll(`input[name="int-${idPrefix}"]`);
+                inputs.forEach(i => i.addEventListener('change', enableBtn));
+            } else if (data.type === 'complex') {
+                const inputs = document.querySelectorAll(`input[name="int-${idPrefix}"]`);
+                inputs.forEach(i => i.addEventListener('change', () => {
+                    const checked = document.querySelectorAll(`input[name="int-${idPrefix}"]:checked`).length > 0;
+                    if(checked) enableBtn(); else {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                }));
+            } else if (data.type === 'match') {
+                const selects = document.querySelectorAll(`.match-select`);
+                selects.forEach(s => s.addEventListener('change', () => {
+                    const allSelected = Array.from(selects).every(sel => sel.value !== "");
+                    if(allSelected) enableBtn();
+                }));
+            } else if (data.type === 'order') {
+                // For order, always enabled since default order might be considered their answer (though unlikely correct initially)
+                enableBtn();
+            }
+        }
+
+        function moveOrder(btn, direction) {
+            playSound('click');
+            const item = btn.closest('.order-item');
+            const container = item.parentElement;
+            if (direction === 'up' && item.previousElementSibling) {
+                container.insertBefore(item, item.previousElementSibling);
+            } else if (direction === 'down' && item.nextElementSibling) {
+                container.insertBefore(item.nextElementSibling, item);
+            }
+        }
+
+        // --- STAGE LOGIC ---
+        function checkStageInteraction() {
+            playSound('click');
+            const stage = learningFlow[currentStageIndex];
+            const data = stage.interaction;
+            const idPrefix = `stage-${currentStageIndex}`;
+            let isCorrect = false;
+
+            if (data.type === 'mc') {
+                const val = document.querySelector(`input[name="int-${idPrefix}"]:checked`).value;
+                isCorrect = parseInt(val) === data.correctIndex;
+            } else if (data.type === 'tf') {
+                const val = document.querySelector(`input[name="int-${idPrefix}"]:checked`).value === 'true';
+                isCorrect = val === data.correctAnswer;
+            } else if (data.type === 'match') {
+                const selects = document.querySelectorAll(`select[name^="match-${idPrefix}"]`);
+                isCorrect = true;
+                selects.forEach((sel, idx) => {
+                    if (sel.value !== data.items[idx].target) isCorrect = false;
+                });
+            }
+
+            showFeedback(isCorrect, data.feedback, () => {
+                currentStageIndex++;
+                renderCurrentStage();
+            });
+        }
+
+        // --- QUIZ LOGIC ---
+        function renderQuizQuestion() {
+            updateProgress();
+            const q = quizQuestions[currentQuizIndex];
+            const area = document.getElementById('content-area');
+            
+            let html = `
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 class="text-xl font-bold text-gray-800">Soal ${currentQuizIndex + 1}</h2>
+                    <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded">HOTS</span>
+                </div>
+                <p class="text-lg text-gray-800 mb-6 leading-relaxed">${q.q}</p>
+                ${renderInteractionUI(q, `quiz-${currentQuizIndex}`)}
+                <button id="btn-check-quiz" onclick="checkQuizAnswer()" class="mt-8 w-full bg-econ text-white font-bold py-4 rounded-xl text-lg transition opacity-50 cursor-not-allowed" disabled>Konfirmasi Jawaban</button>
+            `;
+            
+            area.innerHTML = html;
+            setupInteractionListeners(q, `quiz-${currentQuizIndex}`);
+            setMascotState('think', 'Baca baik-baik kasusnya. Analisis pelan-pelan.');
+        }
+
+        function checkQuizAnswer() {
+            const q = quizQuestions[currentQuizIndex];
+            const idPrefix = `quiz-${currentQuizIndex}`;
+            let isCorrect = false;
+
+            if (q.type === 'mc') {
+                const val = document.querySelector(`input[name="int-${idPrefix}"]:checked`).value;
+                isCorrect = parseInt(val) === q.correctIndex;
+            } 
+            else if (q.type === 'complex') {
+                const checked = Array.from(document.querySelectorAll(`input[name="int-${idPrefix}"]:checked`)).map(cb => parseInt(cb.value));
+                // Arrays must match exactly
+                if(checked.length === q.correctIndices.length && checked.every(val => q.correctIndices.includes(val))) {
+                    isCorrect = true;
+                }
+            } 
+            else if (q.type === 'tf') {
+                const val = document.querySelector(`input[name="int-${idPrefix}"]:checked`).value === 'true';
+                isCorrect = val === q.correctAnswer;
+            }
+            else if (q.type === 'match') {
+                const selects = document.querySelectorAll(`select[name^="match-${idPrefix}"]`);
+                isCorrect = true;
+                selects.forEach((sel, idx) => {
+                    if (sel.value !== q.items[idx].target) isCorrect = false;
+                });
+            }
+            else if (q.type === 'order') {
+                const items = document.querySelectorAll(`#order-container-${idPrefix} .order-item`);
+                const userOrder = Array.from(items).map(item => parseInt(item.getAttribute('data-id')));
+                isCorrect = JSON.stringify(userOrder) === JSON.stringify(q.correctOrder);
+            }
+
+            if (isCorrect) {
+                score += 10;
+                correctAnswersCount++;
+            } else {
+                wrongAnswersCount++;
+            }
+
+            showFeedback(isCorrect, q.feedback, () => {
+                currentQuizIndex++;
+                if (currentQuizIndex < quizQuestions.length) {
+                    renderQuizQuestion();
+                } else {
+                    finishApp();
+                }
+            });
+        }
+
+        // --- FEEDBACK SYSTEM ---
+        let feedbackCallback = null;
+        function showFeedback(isCorrect, explanation, callback) {
+            feedbackCallback = callback;
+            const modal = document.getElementById('feedback-modal');
+            const panel = document.getElementById('feedback-panel');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const exp = document.getElementById('feedback-explanation');
+            const btn = document.getElementById('btn-next-step');
+
+            modal.classList.remove('hidden');
+            // small delay for transition
+            setTimeout(() => { modal.classList.remove('opacity-0'); panel.classList.remove('scale-95'); }, 10);
+
+            exp.innerHTML = explanation;
+
+            if (isCorrect) {
+                playSound('correct');
+                setMascotState('happy', 'Hore! Analisismu tajam sekali!');
+                icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-green-100 text-green-500';
+                icon.innerHTML = '<i class="fas fa-check"></i>';
+                title.innerText = 'Benar Sekali!';
+                title.className = 'text-2xl font-bold text-green-600';
+                btn.className = 'w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition';
+            } else {
+                playSound('wrong');
+                setMascotState('sad', 'Oh tidak, mari pelajari penjelasannya!');
+                icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-red-100 text-red-500';
+                icon.innerHTML = '<i class="fas fa-times"></i>';
+                title.innerText = 'Kurang Tepat';
+                title.className = 'text-2xl font-bold text-red-600';
+                btn.className = 'w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition';
+            }
+        }
+
+        function closeFeedbackAndNext() {
+            playSound('click');
+            const modal = document.getElementById('feedback-modal');
+            const panel = document.getElementById('feedback-panel');
+            
+            modal.classList.add('opacity-0');
+            panel.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (feedbackCallback) feedbackCallback();
+            }, 300);
+        }
+
+        // --- FINISH SYSTEM ---
+        function finishApp() {
+            playSound('finish');
+            document.getElementById('screen-dynamic').classList.add('hidden');
+            document.getElementById('mascot-container').classList.add('hidden');
+            const resultScreen = document.getElementById('screen-result');
+            resultScreen.classList.remove('hidden');
+
+            // Set final stats
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('stat-correct').innerText = correctAnswersCount;
+            document.getElementById('stat-wrong').innerText = wrongAnswersCount;
+
+            // Animate Circle
+            const circle = document.getElementById('score-circle');
+            circle.setAttribute('stroke-dasharray', `${score}, 100`);
+            
+            let predicate = "";
+            let colorClass = "";
+            let reflection = "";
+
+            if (score >= 80) {
+                predicate = "Sangat Baik (Master)";
+                colorClass = "text-green-600";
+                reflection = "<strong>Luar Biasa!</strong> Analisis tingkat tinggi (HOTS) Anda terhadap interaksi antar pelaku ekonomi sangat tajam. Anda sudah menguasai bagaimana suntikan dan kebocoran memengaruhi denyut nadi ekonomi negara.";
+                fireConfetti();
+            } else if (score >= 60) {
+                predicate = "Baik (Paham Konsep)";
+                colorClass = "text-blue-600";
+                reflection = "<strong>Kerja Bagus!</strong> Anda sudah memahami konsep dasar siklus aliran pendapatan. Beberapa soal analisis mungkin menjebak, tapi secara keseluruhan Anda mampu melacak aliran uang antar sektor dengan baik.";
+            } else {
+                predicate = "Perlu Tinjauan";
+                colorClass = "text-red-500";
+                reflection = "<strong>Jangan Menyerah!</strong> Konsep makroekonomi memang membutuhkan abstraksi tinggi. Cobalah ulangi modul ini dan perhatikan umpan balik pada setiap kesalahan untuk memperkuat fundamental Anda mengenai peran RTK, RTP, dan Pemerintah.";
+            }
+
+            document.getElementById('stat-predicate').innerText = predicate;
+            document.getElementById('stat-predicate').className = `text-xl font-bold ${colorClass}`;
+            document.getElementById('reflection-message').innerHTML = reflection;
+            
+            // Adjust circle color based on score
+            if(score < 60) circle.classList.replace('text-econ', 'text-red-500');
+            else if(score >= 80) circle.classList.replace('text-econ', 'text-green-500');
+        }
+
+        function fireConfetti() {
+            if (typeof confetti !== 'function') return;
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+    </script>
+</body>
+</html>
