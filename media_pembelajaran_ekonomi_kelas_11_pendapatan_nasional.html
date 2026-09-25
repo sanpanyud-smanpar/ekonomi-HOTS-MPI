@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendapatan Nasional | SMAN 1 Parongpong</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        econ: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            DEFAULT: '#0ea5e9', // Primary Light Blue
+                            dark: '#0284c7',    // Deep Light Blue
+                            darker: '#0369a1',
+                            text: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f0f9ff;
+            color: #0c4a6e;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(224, 242, 254, 0.8);
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.08);
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .animate-bounce-subtle { animation: bounce-subtle 2.5s infinite ease-in-out; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Mascot States */
+        #mascot svg { transition: all 0.3s ease; }
+        .mascot-happy #eye-l, .mascot-happy #eye-r { d: path('M 30 35 Q 35 25 40 35'); stroke-width: 3; stroke: #0c4a6e; fill: transparent; }
+        .mascot-sad #eye-l, .mascot-sad #eye-r { d: path('M 30 35 L 40 40 M 30 40 L 40 35'); stroke-width: 3; stroke: #0c4a6e; fill: transparent; }
+        .mascot-think #eye-l { transform: translateY(-4px); }
+        .mascot-think #eye-r { transform: scaleY(0.4); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #e0f2fe; }
+        ::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0284c7; }
+
+        /* Option Item Highlight */
+        .option-label:has(input:checked) {
+            background-color: #e0f2fe;
+            border-color: #0ea5e9;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.15);
+        }
+
+        .order-item { transition: all 0.2s ease; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-econ-200">
+
+    <!-- Header Sticky Bar -->
+    <header class="bg-white/90 backdrop-blur-md shadow-sm py-4 px-6 sticky top-0 z-50 flex justify-between items-center border-b-2 border-econ-100">
+        <div class="flex items-center gap-3">
+            <div class="bg-econ text-white p-2.5 rounded-xl shadow-md shadow-blue-200">
+                <i class="fas fa-coins text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg md:text-xl font-bold leading-tight text-econ-text">Ekonomi Kelas 11 (Fase F)</h1>
+                <p class="text-xs text-econ-dark font-semibold">Pendapatan Nasional & Kesejahteraan Ekonomi</p>
+            </div>
+        </div>
+        <div class="hidden md:block text-right">
+            <p class="text-sm font-bold text-gray-800">Sangaji Panji Yuda, SE.</p>
+            <p class="text-xs text-econ-dark font-medium">SMAN 1 Parongpong</p>
+        </div>
+    </header>
+
+    <!-- Interactive Mascot (Eko-Bot) -->
+    <div id="mascot-container" class="fixed bottom-4 right-4 z-50 animate-bounce-subtle hidden">
+        <div id="mascot-bubble" class="bg-white text-xs md:text-sm p-3.5 rounded-2xl rounded-br-none shadow-xl mb-2 opacity-0 transition-all duration-300 max-w-[220px] border-2 border-econ-200 text-gray-700 font-medium">
+            Halo! Saya Eko-Bot. Siap belajar Pendapatan Nasional?
+        </div>
+        <div id="mascot" class="w-20 h-20 md:w-24 md:h-24 bg-white rounded-full shadow-2xl border-4 border-econ-200 overflow-hidden flex justify-center items-center relative cursor-pointer hover:scale-105 transition-transform" onclick="pokeMascot()">
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+                <circle cx="50" cy="50" r="50" fill="#e0f2fe" />
+                <rect x="25" y="40" width="50" height="50" rx="20" fill="#0ea5e9" />
+                <rect x="35" y="55" width="30" height="30" rx="10" fill="#ffffff" />
+                <path d="M 40 65 L 60 65 M 40 75 L 60 75" stroke="#bae6fd" stroke-width="3" stroke-linecap="round"/>
+                <path d="M 20 50 Q 50 10 80 50 Z" fill="#0284c7" />
+                <circle cx="35" cy="35" r="10" fill="#ffffff" />
+                <circle cx="65" cy="35" r="10" fill="#ffffff" />
+                <path id="eye-l" d="M 32 35 A 3 3 0 1 0 38 35 A 3 3 0 1 0 32 35" fill="#0c4a6e" />
+                <path id="eye-r" d="M 62 35 A 3 3 0 1 0 68 35 A 3 3 0 1 0 62 35" fill="#0c4a6e" />
+                <path d="M 45 45 L 55 45 L 50 53 Z" fill="#fbbf24" />
+                <line x1="50" y1="25" x2="50" y2="10" stroke="#0c4a6e" stroke-width="3" />
+                <circle cx="50" cy="8" r="5" fill="#ef4444" id="antenna-bulb" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Main Application Canvas -->
+    <main id="app-container" class="flex-grow container mx-auto px-4 py-6 max-w-4xl relative">
+        
+        <!-- Screen 0: Landing / Intro -->
+        <div id="screen-landing" class="glass-panel p-6 md:p-10 rounded-3xl text-center animate-fade-in my-auto">
+            <div class="w-28 h-28 mx-auto bg-gradient-to-tr from-econ-dark to-econ text-white rounded-full flex items-center justify-center text-5xl mb-6 shadow-xl shadow-blue-200">
+                <i class="fas fa-chart-line animate-pulse"></i>
+            </div>
+            <span class="bg-econ-100 text-econ-darker text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-4 inline-block border border-econ-200">
+                Media Pembelajaran Interaktif Deep Learning
+            </span>
+            <h2 class="text-2xl md:text-4xl font-extrabold mb-4 text-econ-text leading-tight">
+                Mengukur Denyut Ekonomi:<br><span class="text-econ">Pendapatan Nasional & Kesejahteraan</span>
+            </h2>
+            <p class="text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed text-sm md:text-base">
+                Bagaimana kita mengetahui apakah perekonomian Indonesia berkembang atau justru timpang? Mari kita bedah melalui simulasi interaktif, analisis kasus nyata, dan soal-soal HOTS berbasis peristiwa riil!
+            </p>
+            
+            <div class="bg-blue-50/80 p-5 rounded-2xl inline-block text-left mb-8 border border-blue-100 max-w-md w-full shadow-inner">
+                <p class="font-bold text-econ-dark mb-3 flex items-center gap-2">
+                    <i class="fas fa-bullseye text-econ"></i> Informasi Pembelajaran:
+                </p>
+                <ul class="text-xs md:text-sm text-gray-700 space-y-2">
+                    <li class="flex items-center"><i class="fas fa-check-circle text-econ mr-2.5"></i>Fase F / Kelas 11 SMA</li>
+                    <li class="flex items-center"><i class="fas fa-check-circle text-econ mr-2.5"></i>Tahap 1 & 2: Eksplorasi & Pendalaman Konsep</li>
+                    <li class="flex items-center"><i class="fas fa-check-circle text-econ mr-2.5"></i>Tahap 3: Evaluasi HOTS (10 Variasi Soal)</li>
+                </ul>
+            </div>
+            <br>
+            <button onclick="startApp()" class="bg-econ hover:bg-econ-dark text-white font-bold py-3.5 px-10 rounded-full text-base md:text-lg transition-all transform hover:scale-105 shadow-xl shadow-blue-300 flex items-center gap-3 mx-auto">
+                <i class="fas fa-play"></i> Mulai Pembelajaran
+            </button>
+        </div>
+
+        <!-- Dynamic Content Screen (Stage 1, Stage 2, and Stage 3 Quiz) -->
+        <div id="screen-dynamic" class="hidden">
+            <!-- Progress Tracker Bar -->
+            <div class="w-full bg-blue-100/70 rounded-full h-3 mb-6 p-0.5 overflow-hidden shadow-inner">
+                <div id="progress-bar" class="bg-gradient-to-r from-econ-400 to-econ-dark h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            
+            <div class="flex justify-between items-center mb-4">
+                <span id="stage-badge" class="bg-blue-100 text-econ-darker text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wide border border-blue-200 shadow-sm">
+                    Tahap 1
+                </span>
+                <span id="progress-text" class="text-xs md:text-sm text-gray-500 font-bold">0/0</span>
+            </div>
+
+            <!-- Content Panel -->
+            <div id="content-area" class="glass-panel p-6 md:p-8 rounded-3xl animate-fade-in shadow-lg">
+                <!-- Injected via JavaScript -->
+            </div>
+        </div>
+
+        <!-- Final Result Screen -->
+        <div id="screen-result" class="hidden glass-panel p-6 md:p-10 rounded-3xl text-center animate-fade-in my-auto shadow-2xl">
+            <h2 class="text-2xl md:text-3xl font-extrabold mb-2 text-econ-text">Evaluasi Pembelajaran Selesai!</h2>
+            <p class="text-gray-600 mb-6 text-sm">Berikut adalah hasil analisis tingkat pemahaman Anda pada materi Pendapatan Nasional.</p>
+            
+            <!-- Radial Progress Circle -->
+            <div class="relative w-44 h-44 mx-auto mb-6">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path class="text-blue-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5" />
+                    <path id="score-circle" class="text-econ transition-all duration-1000 ease-out" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5" stroke-dasharray="0, 100" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="final-score" class="text-4xl md:text-5xl font-black text-econ-dark">0</span>
+                    <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Skor Total</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <div class="bg-green-50 p-3.5 rounded-2xl border border-green-200">
+                    <p class="text-green-800 text-xs font-bold uppercase">Jawaban Benar</p>
+                    <p id="stat-correct" class="text-2xl font-black text-green-600">0</p>
+                </div>
+                <div class="bg-red-50 p-3.5 rounded-2xl border border-red-200">
+                    <p class="text-red-800 text-xs font-bold uppercase">Jawaban Salah</p>
+                    <p id="stat-wrong" class="text-2xl font-black text-red-600">0</p>
+                </div>
+                <div class="bg-blue-50 p-3.5 rounded-2xl border border-blue-200 col-span-2">
+                    <p class="text-econ-text text-xs font-bold uppercase">Predikat Capaian</p>
+                    <p id="stat-predicate" class="text-xl font-bold text-econ-dark">Sangat Baik</p>
+                </div>
+            </div>
+
+            <div id="reflection-message" class="bg-white/80 p-5 rounded-2xl border border-blue-100 text-left mb-8 text-xs md:text-sm text-gray-700 leading-relaxed shadow-sm">
+                <!-- Reflection text injected here -->
+            </div>
+
+            <button onclick="location.reload()" class="bg-econ-text hover:bg-gray-900 text-white font-bold py-3.5 px-8 rounded-full transition-all shadow-lg flex items-center gap-2 mx-auto">
+                <i class="fas fa-redo"></i> Ulangi Modul Pembelajaran
+            </button>
+        </div>
+    </main>
+
+    <!-- Modal Feedback Window -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 transform scale-95 transition-transform duration-300 shadow-2xl border border-blue-100" id="feedback-panel">
+            <div class="text-center mb-4">
+                <div id="feedback-icon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3"></div>
+                <h3 id="feedback-title" class="text-xl md:text-2xl font-bold"></h3>
+            </div>
+            <div id="feedback-explanation" class="text-gray-700 text-xs md:text-sm mb-6 p-4 bg-blue-50/60 rounded-2xl border border-blue-100 leading-relaxed"></div>
+            <button onclick="closeFeedbackAndNext()" id="btn-next-step" class="w-full bg-econ hover:bg-econ-dark text-white font-bold py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                Lanjutkan Pembelajaran <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA NASKAH PEMBELAJARAN & KUIS HOTS ---
+        const learningFlow = [
+            // TAHAP 1: EKSPLORASI KONSEP
+            {
+                stage: "Tahap 1: Eksplorasi Konsep",
+                type: "content",
+                title: "Memahami Esensi Pendapatan Nasional (GDP vs PNB)",
+                content: `
+                    <p class="mb-4">Pendapatan nasional adalah jumlah total nilai barang dan jasa akhir yang dihasilkan oleh suatu negara dalam periode tertentu (biasanya 1 tahun).</p>
+                    <p class="mb-4">Dua indikator utama yang sering membingungkan adalah <strong>Gross Domestic Product (GDP/PDB)</strong> dan <strong>Gross National Product (GNP/PNB)</strong>:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-4">
+                        <div class="p-3.5 bg-blue-50 rounded-xl border border-blue-200">
+                            <p class="font-bold text-econ-dark mb-1"><i class="fas fa-map-marker-alt mr-1"></i> PDB (GDP): Berbasis Wilayah</p>
+                            <p class="text-xs text-gray-600">Menghitung semua hasil produksi di dalam batas wilayah negara (termasuk oleh Warga Negara Asing di Indonesia).</p>
+                        </div>
+                        <div class="p-3.5 bg-blue-50 rounded-xl border border-blue-200">
+                            <p class="font-bold text-econ-dark mb-1"><i class="fas fa-id-card mr-1"></i> PNB (GNP): Berbasis Kewarganegaraan</p>
+                            <p class="text-xs text-gray-600">Menghitung semua hasil produksi faktor milik WNI (termasuk TKI/PMI di luar negeri, tidak termasuk WNA di Indonesia).</p>
+                        </div>
+                    </div>
+                `,
+                interaction: {
+                    type: "mc",
+                    question: "Studi Kasus: Mr. Smith (WNA asal Amerika) bekerja di PT Freeport Papua, sementara Budi (WNI) bekerja di pabrik Samsung Korea Selatan. Manakah transaksi yang dihitung dalam PDB (GDP) Indonesia?",
+                    options: [
+                        "Pendapatan Budi di Korea Selatan saja.",
+                        "Pendapatan Mr. Smith di Papua saja.",
+                        "Pendapatan Mr. Smith dan Budi digabungkan sepenuhnya.",
+                        "Tidak ada yang dihitung dalam PDB Indonesia."
+                    ],
+                    correctIndex: 1,
+                    feedback: "Benar sekali! PDB (GDP) berprinsip wilayah (domestik). Karena Mr. Smith bekerja di Papua (wilayah Indonesia), hasilnya masuk ke PDB Indonesia. Sebaliknya, Budi bekerja di Korea Selatan, sehingga masuk PDB Korea Selatan (tetapi masuk PNB/GNP Indonesia)."
+                }
+            },
+            // TAHAP 2: PENDALAMAN MATERI
+            {
+                stage: "Tahap 2: Pendalaman Konsep",
+                type: "content",
+                title: "PDB Nominal vs PDB Riil & Inflasi",
+                content: `
+                    <p class="mb-4">Apakah jika PDB Indonesia naik 8% berarti produksi barang/jasa masyarakat otomatis bertambah 8%?</p>
+                    <p class="mb-4">Belum tentu! Angka PDB bisa melonjak hanya karena <strong>kenaikan harga (inflasi)</strong>, bukan karena peningkatan jumlah produksi fisik.</p>
+                    <ul class="list-disc pl-5 text-sm space-y-2 mb-4 text-gray-700">
+                        <li><strong>PDB Nominal:</strong> Mengukur nilai produksi menggunakan harga pasar yang berlaku saat itu.</li>
+                        <li><strong>PDB Riil:</strong> Mengukur nilai produksi menggunakan harga konstan (tahun dasar) untuk menghilangkan efek inflasi.</li>
+                    </ul>
+                `,
+                interaction: {
+                    type: "tf",
+                    question: "Benar atau Salah: Jika PDB Nominal Indonesia naik 10% dalam sebulan, tetapi pada saat yang sama terjadi Inflasi sebesar 12%, maka produksi fisik barang/jasa riil di masyarakat sebenarnya mengalami penurunan.",
+                    correctAnswer: true,
+                    feedback: "Sangat Tepat! Kenaikan PDB nominal (10%) lebih kecil dibanding tingkat inflasi (12%). Ini berarti pertumbuhan riil ekonomi bernilai negatif (-2%), yang menandakan output fisik sebenarnya menyusut!"
+                }
+            },
+            // TAHAP 3: EVALUASI INTRO
+            {
+                stage: "Tahap 3: Evaluasi HOTS",
+                type: "quiz_intro",
+                title: "Uji Pemahaman HOTS: Pendapatan Nasional",
+                content: "Saatnya menguji daya analisis tingkat tinggi Anda melalui 10 soal HOTS interaktif dengan variasi kasus nyata di Indonesia. Bacalah stimulus dengan cermat!",
+            }
+        ];
+
+        // --- 10 SOAL HOTS VARIATIF ---
+        const quizQuestions = [
+            {
+                q: "1. Banyak Pekerja Migran Indonesia (PMI) di Malaysia mengirimkan sebagian gajinya kembali ke kampung halaman di Indonesia (remitansi). Bagaimana transaksi aliran uang ini memengaruhi nilai PDB (GDP) dan PNB (GNP) Indonesia?",
+                type: "mc",
+                options: [
+                    "Meningkatkan PDB Indonesia, namun tidak memengaruhi PNB Indonesia.",
+                    "Meningkatkan PNB Indonesia, namun tidak dihitung dalam PDB Indonesia.",
+                    "Meningkatkan PDB dan PNB Indonesia secara bersamaan dengan jumlah sama.",
+                    "Menurunkan PNB Indonesia karena uang keluar dari pasar luar negeri."
+                ],
+                correctIndex: 1,
+                feedback: "Tepat! Gaji PMI dihasilkan di luar negeri (wilayah Malaysia), sehingga TIDAK masuk PDB Indonesia. Namun, karena PMI adalah WNI, pendapatannya menambah Pendapatan Faktor Neto Luar Negeri yang meningkatkan PNB (GNP) Indonesia."
+            },
+            {
+                q: "2. Dalam perhitungan Pendapatan Nasional dengan metode pengeluaran [Y = C + I + G + (X - M)], manakah transaksi di bawah ini yang BENAR-BENAR dimasukkan ke dalam komponen tersebut di Indonesia? (Pilih semua yang tepat)",
+                type: "complex",
+                options: [
+                    "Pembelian mobil listrik baru impor buatan Korea oleh warga Jakarta",
+                    "Pembelian saham PT Telkom di Bursa Efek Indonesia oleh investor individu",
+                    "Belanja pemerintah untuk membangun jembatan dan jalan tol APBN (G)",
+                    "Pembelian beras organik oleh rumah tangga konsumen lokal (C)",
+                    "Pembelian mesin pabrik bekas yang diproduksi 10 tahun lalu"
+                ],
+                correctIndices: [0, 2, 3],
+                feedback: "Benar! Pembelian barang baru oleh RTK (C) dan Belanja Modal/Infrastruktur Pemerintah (G) dihitung. Impor mobil dihitung di C namun dikurangi di M. Transaksi saham murni finansial (bukan output riil) dan barang bekas diproduksi periode lalu sehingga tidak dihitung dalam PDB tahun berjalan."
+            },
+            {
+                q: "3. Pernyataan T/F: 'Bantuan Langsung Tunai (BLT) dan Beasiswa Program Indonesia Pintar (PIP) yang disalurkan pemerintah TIDAK dihitung dalam PDB, namun secara langsung memperbesar Personal Income (PI) masyarakat.'",
+                type: "tf",
+                correctAnswer: true,
+                feedback: "Benar! Dana bansos/beasiswa adalah 'Transfer Payment' (pembayaran tanpa balas jasa langsung atas produksi berjalan). Oleh karena itu, Transfer Payment dieksklusi dari perhitungan PDB, tetapi ditambahkan saat menghitung Personal Income (PI)."
+            },
+            {
+                q: "4. Urutkan tahapan konsep Pendapatan Nasional dari yang paling luas/bruto hingga siap dibelanjakan oleh masyarakat (Disposable Income):",
+                type: "order",
+                items: [
+                    "Gross National Product (GNP)",
+                    "Net National Product (NNP) [GNP - Penyusutan]",
+                    "Net National Income (NNI) [NNP - Pajak Tidak Langsung]",
+                    "Personal Income (PI) [NNI + Transfer Payment - Pajak Perseroan/Asuransi]",
+                    "Disposable Income (DI) [PI - Pajak Langsung/PPh]"
+                ],
+                correctOrder: [0, 1, 2, 3, 4],
+                feedback: "Sempurna! Urutan logis aliran pendapatan: GNP -> dikurangi penyusutan jadi NNP -> dikurangi pajak tak langsung jadi NNI -> disesuaikan transfer payment/pajak perseroan jadi PI -> dikurangi pajak langsung (PPh) menjadi Disposable Income (DI) yang siap dipakai belanja."
+            },
+            {
+                q: "5. Pasangkan indikator/konsep distribusi pendapatan di bawah ini dengan makna ekonominya yang paling tepat!",
+                type: "match",
+                items: [
+                    "Rasio Gini mendekati angka 1",
+                    "Garis Kurva Lorenz semakin jauh melengkung dari garis diagonal",
+                    "Kriteria Bank Dunia (40% penduduk termiskin menerima < 12% pendapatan)"
+                ],
+                options: [
+                    "Tingkat ketimpangan distribusi pendapatan sangat tinggi",
+                    "Distribusi pendapatan makin tidak merata",
+                    "Tingkat ketimpangan pendapatan kategori tinggi"
+                ],
+                feedback: "Tepat! Angka Gini mendekati 1 dan Kurva Lorenz yang makin melengkung menandakan ketimpangan parah. Menurut kriteria Bank Dunia, jika 40% penduduk bawah menikmati < 12% total pendapatan, wilayah tersebut dikategorikan memiliki ketimpangan tinggi."
+            },
+            {
+                q: "6. Data PDB Nominal Indonesia tahun tertentu menunjukkan peningkatan 12%, sementara angka Indeks Harga Konsumen (Deflator PDB) naik dari 100 menjadi 115. Apa analisis Anda mengenai pertumbuhan ekonomi riil masyarakat?",
+                type: "mc",
+                options: [
+                    "Perekonomian tumbuh sangat pesat sebesar 12%.",
+                    "Pertumbuhan riil sebenarnya terkontraksi (negatif) karena inflasi (15%) lebih tinggi dari pertumbuhan nominal (12%).",
+                    "Masyarakat mengalami surplus pendapatan riil sebesar 3%.",
+                    "Tidak ada hubungan antara inflasi dengan pertumbuhan ekonomi riil."
+                ],
+                correctIndex: 1,
+                feedback: "Analisis Tajam! Deflator PDB naik dari 100 ke 115 menunjukkan laju inflasi sebesar 15%. Karena laju harga (15%) lebih cepat daripada kenaikan nilai nominal PDB (12%), maka pertumbuhan output riil masyarakat sebenarnya bernilai negatif/terkontraksi!"
+            },
+            {
+                q: "7. Mengapa PDB per Kapita yang tinggi di suatu negara belum tentu mencerminkan bahwa seluruh rakyat di negara tersebut hidup sejahtera? (Pilih semua alasan rasional)",
+                type: "complex",
+                options: [
+                    "PDB per Kapita merupakan angka rata-rata matematis dan menyembunyikan ketimpangan ekstrem.",
+                    "PDB tidak memperhitungkan kerusakan lingkungan dan pencemaran akibat pabrik.",
+                    "Sektor ekonomi informal dan UMKM tanpa pembukuan sering tidak terdata dalam PDB resmi.",
+                    "PDB per Kapita dihitung dengan membagi PDB terhadap jumlah ekspor barang."
+                ],
+                correctIndices: [0, 1, 2],
+                feedback: "Sangat Tepat! PDB per kapita adalah rata-rata yang mengabaikan ketimpangan (orang sangat kaya membiaskan rata-rata), mengabaikan eksternalitas negatif lingkungan, dan tidak mencakup transaksi *black market* / informal."
+            },
+            {
+                q: "8. Pasangkan contoh aktivitas perekonomian di Indonesia dengan pendekatan perhitungan PDB yang sesuai!",
+                type: "match",
+                items: [
+                    "Menjumlahkan nilai tambah (value added) dari kayu menjadi papan, lalu menjadi mebel",
+                    "Menjumlahkan upah buruh, sewa tanah, bunga modal, dan profit pengusaha",
+                    "Menjumlahkan Pengeluaran Konsumsi (C), Investasi (I), Belanja Negara (G), & Ekspor Netto"
+                ],
+                options: [
+                    "Pendekatan Produksi",
+                    "Pendekatan Pendapatan",
+                    "Pendekatan Pengeluaran"
+                ],
+                feedback: "Luar Biasa! Tiga metode PDB: Produksi menghitung nilai tambah agar tidak terjadi penghitungan ganda, Pendapatan menjumlahkan balas jasa faktor produksi, dan Pengeluaran menjumlahkan belanja pelaku ekonomi."
+            },
+            {
+                q: "9. Pernyataan T/F: 'Kebijakan penerapkan Pajak Progresif bagi masyarakat berpenghasilan tinggi yang dananya digunakan untuk membiayai subsidi listrik & kesehatan bagi masyarakat miskin bertujuan untuk menggeser Kurva Lorenz mendekati garis pemerataan sempurna.'",
+                type: "tf",
+                correctAnswer: true,
+                feedback: "Tepat sekali! Pajak progresif & redistribusi pendapatan lewat subsidi mengurangi jurang pemisah antara kelompok kaya dan miskin, sehingga memperkecil Rasio Gini dan mendorong Kurva Lorenz lebih dekat ke garis diagonal."
+            },
+            {
+                q: "10. Negara 'A' memiliki PDB sebesar Rp 5.000 Triliun. Namun, pendapatan warga asing di negara A sebesar Rp 800 Triliun, sedangkan pendapatan warga negara A di luar negeri hanya Rp 300 Triliun. Berapakah nilai Gross National Product (GNP) negara A tersebut?",
+                type: "mc",
+                options: [
+                    "Rp 6.100 Triliun",
+                    "Rp 5.500 Triliun",
+                    "Rp 4.500 Triliun",
+                    "Rp 3.900 Triliun"
+                ],
+                correctIndex: 2,
+                feedback: "Perhitungan Tepat! Rumus: GNP = GDP + (Pendapatan WN di LN - Pendapatan WNA di DN). Maka GNP = 5.000 + (300 - 800) = 5.000 - 500 = Rp 4.500 Triliun."
+            }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let currentStageIndex = 0;
+        let isQuizMode = false;
+        let currentQuizIndex = 0;
+        let score = 0;
+        let correctAnswersCount = 0;
+        let wrongAnswersCount = 0;
+        let audioCtx = null;
+
+        // --- NATIVE WEB AUDIO SYNTHESIZER ---
+        function initAudio() {
+            if (audioCtx) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            } catch (e) {
+                console.warn("Web Audio API not supported", e);
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } 
+            else if (type === 'correct') {
+                // Happy Triad Chord (C5 - E5 - G5)
+                const freqs = [523.25, 659.25, 783.99];
+                freqs.forEach((f, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now + i * 0.1);
+                    gain.gain.setValueAtTime(0.12, now + i * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.1);
+                    osc.stop(now + i * 0.1 + 0.25);
+                });
+            } 
+            else if (type === 'wrong') {
+                // Descending Low Tone
+                const freqs = [220, 174.61];
+                freqs.forEach((f, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(f, now + i * 0.15);
+                    gain.gain.setValueAtTime(0.1, now + i * 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.15);
+                    osc.stop(now + i * 0.15 + 0.25);
+                });
+            } 
+            else if (type === 'finish') {
+                // Victory Fanfare
+                const notes = [261.63, 329.63, 392.00, 523.25, 659.25];
+                notes.forEach((f, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, now + i * 0.12);
+                    gain.gain.setValueAtTime(0.15, now + i * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.12);
+                    osc.stop(now + i * 0.12 + 0.4);
+                });
+            }
+        }
+
+        // --- MASCOT CONTROL ---
+        function setMascotState(state, message = "") {
+            const mascot = document.getElementById('mascot');
+            const bubble = document.getElementById('mascot-bubble');
+            const bulb = document.getElementById('antenna-bulb');
+            
+            mascot.className = `w-20 h-20 md:w-24 md:h-24 bg-white rounded-full shadow-2xl border-4 border-econ-200 overflow-hidden flex justify-center items-center relative cursor-pointer hover:scale-105 transition-transform mascot-${state}`;
+            
+            if(state === 'happy') bulb.setAttribute('fill', '#10b981');
+            else if(state === 'sad') bulb.setAttribute('fill', '#ef4444');
+            else bulb.setAttribute('fill', '#f59e0b');
+            
+            if (message) {
+                bubble.innerHTML = message;
+                bubble.classList.remove('opacity-0');
+                clearTimeout(window.mascotTimeout);
+                window.mascotTimeout = setTimeout(() => bubble.classList.add('opacity-0'), 5000);
+            }
+        }
+
+        function pokeMascot() {
+            playSound('click');
+            setMascotState('happy', 'Semangat! Pahami alirannya, bukan sekadar hafal rumus!');
+            const container = document.getElementById('mascot-container');
+            container.classList.add('animate-shake');
+            setTimeout(() => container.classList.remove('animate-shake'), 400);
+        }
+
+        // --- NAVIGATION & FLOW CONTROL ---
+        function startApp() {
+            initAudio();
+            playSound('click');
+            document.getElementById('screen-landing').classList.add('hidden');
+            document.getElementById('screen-dynamic').classList.remove('hidden');
+            document.getElementById('mascot-container').classList.remove('hidden');
+            setMascotState('happy', 'Mari eksplorasi materi Pendapatan Nasional!');
+            renderCurrentStage();
+        }
+
+        function updateProgress() {
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const badge = document.getElementById('stage-badge');
+            
+            if (!isQuizMode) {
+                let pct = ((currentStageIndex + 1) / learningFlow.length) * 100;
+                progressBar.style.width = `${pct}%`;
+                progressText.innerText = `${currentStageIndex + 1}/${learningFlow.length}`;
+                badge.innerText = learningFlow[currentStageIndex].stage;
+            } else {
+                let pct = ((currentQuizIndex + 1) / quizQuestions.length) * 100;
+                progressBar.style.width = `${pct}%`;
+                progressText.innerText = `Soal ${currentQuizIndex + 1}/${quizQuestions.length}`;
+                badge.innerText = "Tahap 3: Kuis HOTS";
+                badge.className = "bg-orange-100 text-orange-800 text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wide border border-orange-200 shadow-sm";
+            }
+        }
+
+        function renderCurrentStage() {
+            const area = document.getElementById('content-area');
+            area.innerHTML = '';
+            area.classList.remove('animate-fade-in');
+            void area.offsetWidth; // trigger reflow
+            area.classList.add('animate-fade-in');
+
+            if (!isQuizMode) {
+                const stage = learningFlow[currentStageIndex];
+                updateProgress();
+                
+                let html = `<h2 class="text-xl md:text-2xl font-bold mb-3 text-econ-text">${stage.title}</h2>`;
+                if (stage.content) html += `<div class="text-gray-700 leading-relaxed mb-6 text-sm md:text-base">${stage.content}</div>`;
+                
+                if (stage.type === 'quiz_intro') {
+                    html += `
+                        <div class="bg-blue-50/80 p-5 rounded-2xl border border-blue-100 mb-6">
+                            <p class="text-sm text-gray-700 leading-relaxed mb-4">${stage.content}</p>
+                            <button onclick="enterQuizMode()" class="w-full bg-econ hover:bg-econ-dark text-white font-bold py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                                <i class="fas fa-play"></i> Mulai Kuis Evaluasi HOTS
+                            </button>
+                        </div>
+                    `;
+                    area.innerHTML = html;
+                    setMascotState('think', 'Siap membuktikan analisis ekonomimu?');
+                    return;
+                }
+
+                if (stage.interaction) {
+                    html += `<div class="bg-white/90 p-5 rounded-2xl border border-econ-200 mt-4 shadow-sm">`;
+                    html += `<h3 class="font-bold text-sm md:text-base mb-3 text-econ-dark flex items-center gap-2"><i class="fas fa-question-circle"></i> Interaksi Pemahaman:</h3>`;
+                    html += `<p class="mb-4 text-gray-800 font-medium text-xs md:text-sm">${stage.interaction.question}</p>`;
+                    html += renderInteractionUI(stage.interaction, `stage-${currentStageIndex}`);
+                    html += `</div>`;
+                    html += `<button id="btn-check-stage" onclick="checkStageInteraction()" class="mt-6 w-full bg-econ text-white font-bold py-3.5 rounded-xl transition opacity-50 cursor-not-allowed" disabled>Cek Jawaban</button>`;
+                }
+
+                area.innerHTML = html;
+                setupInteractionListeners(stage.interaction, `stage-${currentStageIndex}`);
+            } else {
+                renderQuizQuestion();
+            }
+        }
+
+        function enterQuizMode() {
+            playSound('click');
+            isQuizMode = true;
+            currentQuizIndex = 0;
+            renderQuizQuestion();
+        }
+
+        // --- INTERACTION RENDERER ---
+        function renderInteractionUI(data, idPrefix) {
+            let html = '';
+            switch(data.type) {
+                case 'mc':
+                    html += `<div class="space-y-2.5">`;
+                    data.options.forEach((opt, idx) => {
+                        html += `
+                        <label class="option-label flex items-start p-3.5 border border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50/50 transition">
+                            <input type="radio" name="int-${idPrefix}" value="${idx}" class="mt-1 w-4 h-4 text-econ border-gray-300 focus:ring-econ mr-3">
+                            <span class="text-xs md:text-sm text-gray-700 leading-snug">${opt}</span>
+                        </label>`;
+                    });
+                    html += `</div>`;
+                    break;
+                case 'complex':
+                    html += `<p class="text-xs text-blue-600 font-semibold mb-2"><i class="fas fa-info-circle mr-1"></i>Pilih semua pilihan jawaban yang sesuai:</p>`;
+                    html += `<div class="space-y-2.5">`;
+                    data.options.forEach((opt, idx) => {
+                        html += `
+                        <label class="option-label flex items-start p-3.5 border border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50/50 transition">
+                            <input type="checkbox" name="int-${idPrefix}" value="${idx}" class="mt-1 w-4 h-4 text-econ rounded border-gray-300 focus:ring-econ mr-3">
+                            <span class="text-xs md:text-sm text-gray-700 leading-snug">${opt}</span>
+                        </label>`;
+                    });
+                    html += `</div>`;
+                    break;
+                case 'tf':
+                    html += `
+                    <div class="flex gap-4">
+                        <label class="option-label flex-1 flex flex-col items-center justify-center p-5 border border-gray-200 rounded-2xl cursor-pointer hover:bg-blue-50 transition">
+                            <input type="radio" name="int-${idPrefix}" value="true" class="hidden">
+                            <i class="fas fa-check-circle text-3xl text-green-500 mb-1.5"></i>
+                            <span class="font-bold text-xs md:text-sm">BENAR</span>
+                        </label>
+                        <label class="option-label flex-1 flex flex-col items-center justify-center p-5 border border-gray-200 rounded-2xl cursor-pointer hover:bg-blue-50 transition">
+                            <input type="radio" name="int-${idPrefix}" value="false" class="hidden">
+                            <i class="fas fa-times-circle text-3xl text-red-500 mb-1.5"></i>
+                            <span class="font-bold text-xs md:text-sm">SALAH</span>
+                        </label>
+                    </div>`;
+                    break;
+                case 'match':
+                    html += `<div class="space-y-3">`;
+                    data.items.forEach((item, idx) => {
+                        html += `
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 p-3 border border-gray-200 rounded-xl bg-gray-50/70">
+                            <div class="flex-1 text-xs md:text-sm font-medium text-gray-800">${item.text}</div>
+                            <div class="w-full md:w-auto">
+                                <select name="match-${idPrefix}-${idx}" class="match-select bg-white border border-gray-300 text-gray-800 text-xs md:text-sm rounded-lg focus:ring-econ focus:border-econ block w-full p-2.5">
+                                    <option value="" disabled selected>-- Pilih Pasangan --</option>
+                                    ${data.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>`;
+                    });
+                    html += `</div>`;
+                    break;
+                case 'order':
+                    html += `<div id="order-container-${idPrefix}" class="space-y-2">`;
+                    let shuffledIndices = [...Array(data.items.length).keys()].sort(() => Math.random() - 0.5);
+                    shuffledIndices.forEach((idx) => {
+                        html += `
+                        <div class="order-item flex items-center p-3 border border-gray-200 rounded-xl bg-white shadow-sm" data-id="${idx}">
+                            <div class="flex flex-col mr-3 gap-1">
+                                <button onclick="moveOrder(this, 'up')" class="bg-blue-50 hover:bg-blue-100 text-econ-dark rounded p-1 text-xs"><i class="fas fa-chevron-up"></i></button>
+                                <button onclick="moveOrder(this, 'down')" class="bg-blue-50 hover:bg-blue-100 text-econ-dark rounded p-1 text-xs"><i class="fas fa-chevron-down"></i></button>
+                            </div>
+                            <span class="text-xs md:text-sm font-medium text-gray-700">${data.items[idx]}</span>
+                        </div>`;
+                    });
+                    html += `</div><p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> Gunakan panah untuk mengurutkan posisi dari atas ke bawah.</p>`;
+                    break;
+            }
+            return html;
+        }
+
+        function setupInteractionListeners(data, idPrefix) {
+            const btn = document.getElementById(isQuizMode ? 'btn-check-quiz' : 'btn-check-stage');
+            const enableBtn = () => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.classList.add('hover:bg-econ-dark', 'shadow-md');
+            };
+
+            if (data.type === 'mc' || data.type === 'tf') {
+                const inputs = document.querySelectorAll(`input[name="int-${idPrefix}"]`);
+                inputs.forEach(i => i.addEventListener('change', enableBtn));
+            } else if (data.type === 'complex') {
+                const inputs = document.querySelectorAll(`input[name="int-${idPrefix}"]`);
+                inputs.forEach(i => i.addEventListener('change', () => {
+                    const checked = document.querySelectorAll(`input[name="int-${idPrefix}"]:checked`).length > 0;
+                    if(checked) enableBtn(); else {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                }));
+            } else if (data.type === 'match') {
+                const selects = document.querySelectorAll(`.match-select`);
+                selects.forEach(s => s.addEventListener('change', () => {
+                    const allSelected = Array.from(selects).every(sel => sel.value !== "");
+                    if(allSelected) enableBtn();
+                }));
+            } else if (data.type === 'order') {
+                enableBtn();
+            }
+        }
+
+        function moveOrder(btn, direction) {
+            playSound('click');
+            const item = btn.closest('.order-item');
+            const container = item.parentElement;
+            if (direction === 'up' && item.previousElementSibling) {
+                container.insertBefore(item, item.previousElementSibling);
+            } else if (direction === 'down' && item.nextElementSibling) {
+                container.insertBefore(item.nextElementSibling, item);
+            }
+        }
+
+        // --- STAGE INTERACTION CHECK ---
+        function checkStageInteraction() {
+            playSound('click');
+            const stage = learningFlow[currentStageIndex];
+            const data = stage.interaction;
+            const idPrefix = `stage-${currentStageIndex}`;
+            let isCorrect = false;
+
+            if (data.type === 'mc') {
+                const val = document.querySelector(`input[name="int-${idPrefix}"]:checked`).value;
+                isCorrect = parseInt(val) === data.correctIndex;
+            } else if (data.type === 'tf') {
+                const val = document.querySelector(`input[name="int-${idPrefix}"]:checked`).value === 'true';
+                isCorrect = val === data.correctAnswer;
+            }
+
+            showFeedback(isCorrect, data.feedback, () => {
+                currentStageIndex++;
+                renderCurrentStage();
+            });
+        }
+
+        // --- QUIZ RENDERING & CHECKING ---
+        function renderQuizQuestion() {
+            updateProgress();
+            const q = quizQuestions[currentQuizIndex];
+            const area = document.getElementById('content-area');
+            
+            let html = `
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 class="text-base md:text-lg font-bold text-econ-text">Soal Evaluasi ${currentQuizIndex + 1}</h2>
+                    <span class="bg-blue-100 text-econ-dark text-xs font-bold px-2.5 py-1 rounded-full border border-blue-200">HOTS Case</span>
+                </div>
+                <p class="text-sm md:text-base text-gray-800 mb-6 leading-relaxed font-medium">${q.q}</p>
+                ${renderInteractionUI(q, `quiz-${currentQuizIndex}`)}
+                <button id="btn-check-quiz" onclick="checkQuizAnswer()" class="mt-8 w-full bg-econ text-white font-bold py-3.5 rounded-xl text-base transition opacity-50 cursor-not-allowed flex items-center justify-center gap-2" disabled>
+                    Konfirmasi Jawaban <i class="fas fa-check"></i>
+                </button>
+            `;
+            
+            area.innerHTML = html;
+            setupInteractionListeners(q, `quiz-${currentQuizIndex}`);
+            setMascotState('think', 'Baca dan analisis baik-baik solusinya!');
+        }
+
+        function checkQuizAnswer() {
+            const q = quizQuestions[currentQuizIndex];
+            const idPrefix = `quiz-${currentQuizIndex}`;
+            let isCorrect = false;
+
+            if (q.type === 'mc') {
+                const val = document.querySelector(`input[name="int-${idPrefix}"]:checked`).value;
+                isCorrect = parseInt(val) === q.correctIndex;
+            } 
+            else if (q.type === 'complex') {
+                const checked = Array.from(document.querySelectorAll(`input[name="int-${idPrefix}"]:checked`)).map(cb => parseInt(cb.value));
+                if(checked.length === q.correctIndices.length && checked.every(val => q.correctIndices.includes(val))) {
+                    isCorrect = true;
+                }
+            } 
+            else if (q.type === 'tf') {
+                const val = document.querySelector(`input[name="int-${idPrefix}"]:checked`).value === 'true';
+                isCorrect = val === q.correctAnswer;
+            }
+            else if (q.type === 'match') {
+                const selects = document.querySelectorAll(`select[name^="match-${idPrefix}"]`);
+                isCorrect = true;
+                selects.forEach((sel, idx) => {
+                    if (sel.value !== q.options[idx]) isCorrect = false;
+                });
+            }
+            else if (q.type === 'order') {
+                const items = document.querySelectorAll(`#order-container-${idPrefix} .order-item`);
+                const userOrder = Array.from(items).map(item => parseInt(item.getAttribute('data-id')));
+                isCorrect = JSON.stringify(userOrder) === JSON.stringify(q.correctOrder);
+            }
+
+            if (isCorrect) {
+                score += 10;
+                correctAnswersCount++;
+            } else {
+                wrongAnswersCount++;
+            }
+
+            showFeedback(isCorrect, q.feedback, () => {
+                currentQuizIndex++;
+                if (currentQuizIndex < quizQuestions.length) {
+                    renderQuizQuestion();
+                } else {
+                    finishApp();
+                }
+            });
+        }
+
+        // --- FEEDBACK SYSTEM ---
+        let feedbackCallback = null;
+        function showFeedback(isCorrect, explanation, callback) {
+            feedbackCallback = callback;
+            const modal = document.getElementById('feedback-modal');
+            const panel = document.getElementById('feedback-panel');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const exp = document.getElementById('feedback-explanation');
+            const btn = document.getElementById('btn-next-step');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); panel.classList.remove('scale-95'); }, 10);
+
+            exp.innerHTML = explanation;
+
+            if (isCorrect) {
+                playSound('correct');
+                setMascotState('happy', 'Luar biasa! Analisis ekonomimu tepat!');
+                icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-green-100 text-green-500';
+                icon.innerHTML = '<i class="fas fa-check"></i>';
+                title.innerText = 'Jawaban Benar!';
+                title.className = 'text-xl md:text-2xl font-bold text-green-600';
+                btn.className = 'w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2';
+            } else {
+                playSound('wrong');
+                setMascotState('sad', 'Yuk pelajari kembali analisis konsepnya!');
+                icon.className = 'w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-red-100 text-red-500';
+                icon.innerHTML = '<i class="fas fa-times"></i>';
+                title.innerText = 'Jawaban Kurang Tepat';
+                title.className = 'text-xl md:text-2xl font-bold text-red-600';
+                btn.className = 'w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2';
+            }
+        }
+
+        function closeFeedbackAndNext() {
+            playSound('click');
+            const modal = document.getElementById('feedback-modal');
+            const panel = document.getElementById('feedback-panel');
+            
+            modal.classList.add('opacity-0');
+            panel.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (feedbackCallback) feedbackCallback();
+            }, 300);
+        }
+
+        // --- FINAL DASHBOARD & REFLECTION ---
+        function finishApp() {
+            playSound('finish');
+            document.getElementById('screen-dynamic').classList.add('hidden');
+            document.getElementById('mascot-container').classList.add('hidden');
+            const resultScreen = document.getElementById('screen-result');
+            resultScreen.classList.remove('hidden');
+
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('stat-correct').innerText = correctAnswersCount;
+            document.getElementById('stat-wrong').innerText = wrongAnswersCount;
+
+            const circle = document.getElementById('score-circle');
+            circle.setAttribute('stroke-dasharray', `${score}, 100`);
+            
+            let predicate = "";
+            let colorClass = "";
+            let reflection = "";
+
+            if (score >= 80) {
+                predicate = "Sangat Baik (Mastery)";
+                colorClass = "text-green-600";
+                reflection = "<strong>Selamat! Kinerja Sangat Luar Biasa!</strong> Pemahaman Anda mengenai indikator Pendapatan Nasional, PDB Riil vs Nominal, dan distribusi pendapatan sudah sangat matang. Anda mampu menganalisis fenomena makroekonomi secara kritis dan solutif.";
+                fireConfetti();
+            } else if (score >= 60) {
+                predicate = "Baik (Cukup Paham)";
+                colorClass = "text-blue-600";
+                reflection = "<strong>Kerja Bagus!</strong> Anda sudah menguasai sebagian besar konsep dasar Pendapatan Nasional. Untuk meningkatkan kemampuan analisis HOTS, perhatikan kembali hubungan antara inflasi, deflator PDB, dan kelemahan indikator PDB per kapita.";
+            } else {
+                predicate = "Perlu Tinjauan Kembali";
+                colorClass = "text-red-500";
+                reflection = "<strong>Jangan Berkecil Hati!</strong> Konsep makroekonomi memang membutuhkan latihan analisis kasus secara bertahap. Cobalah ulas kembali materi mengenai beda wilayah (PDB) vs kewarganegaraan (PNB) serta alur perhitungan Disposable Income.";
+            }
+
+            document.getElementById('stat-predicate').innerText = predicate;
+            document.getElementById('stat-predicate').className = `text-xl font-bold ${colorClass}`;
+            document.getElementById('reflection-message').innerHTML = reflection;
+            
+            if(score < 60) circle.classList.replace('text-econ', 'text-red-500');
+            else if(score >= 80) circle.classList.replace('text-econ', 'text-green-500');
+        }
+
+        function fireConfetti() {
+            if (typeof confetti !== 'function') return;
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+    </script>
+</body>
+</html>
